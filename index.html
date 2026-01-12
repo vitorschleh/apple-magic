@@ -3,352 +3,309 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Apple Music</title>
+    <title>Spotify</title>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <style>
-        /* --- RESET & FONTS --- */
+        /* --- RESET E BASE --- */
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body {
             margin: 0; padding: 0;
-            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            color: white;
-            height: 100vh;
-            overflow: hidden;
-            background-color: #000;
-            display: flex;
-            flex-direction: column;
+            background: linear-gradient(180deg, #404040 0%, #121212 100%); /* Gradiente Spotify */
+            font-family: 'Circular', -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif;
+            color: white; height: 100vh; overflow: hidden;
+            display: flex; flex-direction: column;
         }
 
-        /* --- BACKGROUND DINÂMICO --- */
-        .dynamic-bg {
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background-size: cover;
-            background-position: center;
-            filter: blur(60px) brightness(0.6) saturate(1.8);
-            z-index: -1;
-            transition: background-image 1s ease;
-            opacity: 0.8;
-        }
-
-        /* --- TELA DE BLOQUEIO (Touch to Start) --- */
-        #lock-screen {
+        /* TELA DE BLOQUEIO (Touch to Start) - OBRIGATÓRIA PARA ÁUDIO */
+        #start-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: #000;
-            z-index: 9999;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            flex-direction: column;
-            cursor: pointer;
+            background: #000; z-index: 9999;
+            display: flex; justify-content: center; align-items: center;
+            flex-direction: column; cursor: pointer;
         }
-        .apple-logo { width: 80px; height: 80px; fill: white; margin-bottom: 20px; }
-        .tap-text { color: #888; font-size: 14px; letter-spacing: 1px; text-transform: uppercase; }
-
-        /* --- UI PRINCIPAL --- */
-        .player-container {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            justify-content: flex-end; /* Elementos embaixo */
-            padding: 0 30px 50px 30px; /* Margens laterais e inferior */
-            max-width: 500px;
-            margin: 0 auto;
-            width: 100%;
+        
+        /* HEADER (Setinha e Texto) */
+        .header {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 15px 20px; margin-top: 10px;
+        }
+        .header-text {
+            text-align: center; font-size: 12px; letter-spacing: 1px;
+            text-transform: uppercase; color: rgba(255,255,255,0.7);
         }
 
-        /* Handle (topo) */
-        .grab-handle {
-            width: 36px; height: 5px;
-            background: rgba(255,255,255,0.2);
-            border-radius: 5px;
-            align-self: center;
-            position: absolute; top: 15px;
-        }
-
-        /* Capa do Álbum */
-        .album-art-container {
-            width: 100%;
-            aspect-ratio: 1/1;
-            margin-bottom: 40px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            position: relative;
+        /* CAPA DO ÁLBUM */
+        .album-container {
+            flex: 1; display: flex; justify-content: center; align-items: center; padding: 20px;
         }
         .album-art {
-            width: 100%; height: 100%;
-            border-radius: 12px;
-            background-color: #1c1c1e;
-            background-size: cover;
-            background-position: center;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
-            transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            transform: scale(0.9); /* Estado pausado (encolhido) */
+            width: 100%; max-width: 340px; aspect-ratio: 1/1;
+            background-color: #282828; background-size: cover; background-position: center;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.6);
+            /* Borda levemente arredondada no estilo Spotify atual */
+            border-radius: 8px; 
+            transition: transform 0.5s ease;
         }
-        .album-art.playing { transform: scale(1); } /* Estado tocando (grande) */
 
-        /* Textos */
-        .info-area { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 25px; }
+        /* INFO DA FAIXA */
+        .track-info-area {
+            padding: 0 24px; margin-bottom: 20px;
+            display: flex; justify-content: space-between; align-items: center;
+        }
         .text-group { flex: 1; padding-right: 15px; overflow: hidden; }
         .track-title {
-            font-size: 22px; font-weight: 700;
-            margin-bottom: 4px;
+            font-size: 24px; font-weight: 700; margin-bottom: 4px;
             white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-            line-height: 1.2;
         }
         .track-artist {
-            font-size: 18px; color: rgba(255,255,255,0.6);
+            font-size: 16px; color: #b3b3b3;
             white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-            font-weight: 400;
         }
-        /* Botão "..." */
-        .more-btn {
-            width: 28px; height: 28px;
-            background: rgba(255,255,255,0.1);
-            border-radius: 50%;
-            display: flex; justify-content: center; align-items: center;
-            font-size: 14px; font-weight: bold; color: white;
-        }
+        .like-icon { color: #1DB954; font-size: 28px; } /* Cor Verde Spotify */
 
-        /* Barra de Progresso */
-        .progress-container { margin-bottom: 30px; }
+        /* BARRA DE PROGRESSO */
+        .progress-area { padding: 0 24px; margin-bottom: 10px; }
         .progress-bar-bg {
-            width: 100%; height: 4px;
-            background: rgba(255,255,255,0.15);
-            border-radius: 2px;
-            position: relative;
-            overflow: hidden;
+            width: 100%; height: 4px; background-color: rgba(255,255,255,0.3);
+            border-radius: 2px; position: relative;
         }
-        .progress-fill {
-            width: 0%; height: 100%;
-            background: rgba(255,255,255,0.8);
-            border-radius: 2px;
+        .progress-bar-fill {
+            width: 0%; height: 100%; background-color: white;
+            border-radius: 2px; position: absolute; transition: width 0.1s linear;
         }
-        .timestamps {
-            display: flex; justify-content: space-between;
-            margin-top: 8px;
-            font-size: 10px; color: rgba(255,255,255,0.4);
-            font-weight: 600;
+        .time-stamps {
+            display: flex; justify-content: space-between; font-size: 11px;
+            color: #b3b3b3; margin-top: 8px; font-weight: 500;
         }
 
-        /* Controles */
+        /* CONTROLES DO PLAYER */
         .controls {
             display: flex; justify-content: space-between; align-items: center;
-            margin-bottom: 40px;
-            padding: 0 10px;
+            padding: 0 24px 40px 24px;
         }
-        .control-btn { background: none; border: none; padding: 0; cursor: pointer; }
-        .icon-svg { fill: white; width: 35px; height: 35px; }
-        .icon-play { width: 55px; height: 55px; } /* Botão play maior */
+        .material-icons { font-size: 28px; color: #b3b3b3; }
         
-        /* Volume (Visual) */
-        .volume-area {
-            display: flex; align-items: center; gap: 10px;
+        /* Botão Play Especial */
+        .play-pause-btn {
+            width: 65px; height: 65px; background-color: white; border-radius: 50%;
+            display: flex; justify-content: center; align-items: center; color: black;
+            transition: transform 0.1s;
         }
-        .vol-icon { width: 12px; height: 12px; fill: rgba(255,255,255,0.5); }
-        .vol-bar {
-            flex: 1; height: 4px;
-            background: rgba(255,255,255,0.15);
-            border-radius: 2px;
-            position: relative;
+        .play-pause-btn:active { transform: scale(0.95); }
+        .play-pause-btn .material-icons { color: black; font-size: 40px; }
+        
+        /* ÁREA DE DEBUG (Invisível para o público, útil pra você) */
+        #debug-status {
+            position: absolute; top: 0; left: 0; width: 100%;
+            background: rgba(29, 185, 84, 0.9); color: black; font-weight: bold;
+            font-size: 10px; text-align: center; padding: 2px; display: none;
+            z-index: 10001;
         }
-        .vol-fill { width: 70%; height: 100%; background: rgba(255,255,255,0.8); border-radius: 2px; }
-
-        /* Botões inferiores */
-        .bottom-actions {
-            display: flex; justify-content: space-between; margin-top: 30px; padding: 0 20px;
-        }
-        .bottom-icon { width: 20px; height: 20px; fill: rgba(255,255,255,0.5); }
-
     </style>
 </head>
 <body>
 
-    <div class="dynamic-bg" id="dynamicBg"></div>
-
-    <div id="lock-screen" onclick="startApp()">
-        <svg class="apple-logo" viewBox="0 0 384 512"><path d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-26.9-47.2-41.7-84.7-44.6-35.5-2.8-74.3 20.7-88.5 20.7-15 0-49.4-19.7-76.4-19.7C63.3 141.2 4 184.8 4 273.5q0 39.3 14.4 81.2c12.8 36.7 59 126.7 107.2 125.2 25.2-.6 43-17.9 75.8-17.9 31.8 0 48.3 17.9 76.4 17.9 48.6-.7 90.4-82.5 102.6-119.3-65.2-30.7-61.7-90-61.7-91.9zm-56.6-164.2c27.3-32.4 24.8-61.9 24-72.5-24.1 1.4-52 16.4-67.9 34.9-17.5 19.8-27.8 44.3-25.6 71.9 26.1 2 52.3-11.4 69.5-34.3z"/></svg>
-        <div class="tap-text">Toque para Iniciar</div>
+    <div id="start-overlay" onclick="unlockAudio()">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/1/19/Spotify_logo_without_text.svg" width="60" style="margin-bottom:20px; filter: brightness(100);">
+        <h1 style="font-size: 16px; color: #1DB954; font-weight: bold; text-transform: uppercase; letter-spacing: 1px;">Toque para Conectar</h1>
     </div>
 
-    <div class="grab-handle"></div>
+    <div id="debug-status">Sistema Iniciado</div>
 
-    <div class="player-container">
+    <div class="header">
+        <span class="material-icons">keyboard_arrow_down</span>
+        <div class="header-text">
+            TOCANDO DA PLAYLIST<br>
+            <span style="font-weight:bold; color:white;">Descobertas da Semana</span>
+        </div>
+        <span class="material-icons">more_vert</span>
+    </div>
+
+    <div class="album-container">
+        <div class="album-art" id="albumArt" style="background-image: url('https://via.placeholder.com/400x400/282828/282828?text=Music');"></div>
+    </div>
+
+    <div class="track-info-area">
+        <div class="text-group">
+            <div class="track-title" id="trackName">Spotify</div>
+            <div class="track-artist" id="artistName">Pronto</div>
+        </div>
+        <span class="material-icons like-icon">favorite</span>
+    </div>
+
+    <div class="progress-area">
+        <div class="progress-bar-bg">
+            <div class="progress-bar-fill" id="progFill"></div>
+        </div>
+        <div class="time-stamps">
+            <span id="currTime">0:00</span>
+            <span id="totalTime">-0:30</span>
+        </div>
+    </div>
+
+    <div class="controls">
+        <span class="material-icons">shuffle</span>
+        <span class="material-icons" style="font-size: 36px;">skip_previous</span>
         
-        <div class="album-art-container">
-            <div class="album-art" id="albumArt" style="background-image: url('https://music.apple.com/assets/product-assets/artwork-placeholder-music.png');"></div>
+        <div class="play-pause-btn" id="playBtn" onclick="manualToggle()">
+            <span class="material-icons" id="playIcon">play_arrow</span>
         </div>
-
-        <div class="info-area">
-            <div class="text-group">
-                <div class="track-title" id="trackName">Apple Music</div>
-                <div class="track-artist" id="artistName">Aguardando Conexão...</div>
-            </div>
-            <div class="more-btn">•••</div>
-        </div>
-
-        <div class="progress-container">
-            <div class="progress-bar-bg">
-                <div class="progress-fill" id="progFill"></div>
-            </div>
-            <div class="timestamps">
-                <span id="currTime">0:00</span>
-                <span id="endTime">-0:30</span>
-            </div>
-        </div>
-
-        <div class="controls">
-            <svg class="icon-svg" viewBox="0 0 24 24"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/></svg>
-            
-            <div onclick="togglePlay()">
-                <svg id="playBtnSVG" class="icon-svg icon-play" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
-            </div>
-            
-            <svg class="icon-svg" viewBox="0 0 24 24"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/></svg>
-        </div>
-
-        <div class="volume-area">
-            <svg class="vol-icon" viewBox="0 0 24 24"><path d="M7 9v6h4l5 5V4l-5 5H7z"/></svg>
-            <div class="vol-bar"><div class="vol-fill"></div></div>
-            <svg class="vol-icon" viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>
-        </div>
-
-        <div class="bottom-actions">
-            <svg class="bottom-icon" viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg> <svg class="bottom-icon" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 14.5c-2.49 0-4.5-2.01-4.5-4.5S9.51 7.5 12 7.5s4.5 2.01 4.5 4.5-2.01 4.5-4.5 4.5zm0-5.5c-.55 0-1 .45-1 1s.45 1 1 1 1-.45 1-1-.45-1-1-1z"/></svg> <svg class="bottom-icon" viewBox="0 0 24 24"><path d="M3 13h2v-2H3v2zm0 4h2v-2H3v2zm0-8h2V7H3v2zm4 4h14v-2H7v2zm0 4h14v-2H7v2zM7 7v2h14V7H7z"/></svg> </div>
-
+        
+        <span class="material-icons" style="font-size: 36px;">skip_next</span>
+        <span class="material-icons">repeat</span>
     </div>
 
-    <audio id="audioPlayer"></audio>
+    <audio id="audioPlayer" crossorigin="anonymous"></audio>
 
     <script>
-        // --- SUA API ---
-        const API_URL = "https://appmaz.vip/api/getdata.php?user=bhj"; 
+        // --- CONFIGURAÇÃO ---
+        const API_USER = "bhj"; // Seu usuário do Hacked
+        
+        // PROXY: Resolve o problema da tela vermelha (CORS)
+        const PROXY_URL = `https://api.allorigins.win/raw?url=${encodeURIComponent("https://appmaz.vip/api/getdata.php?user=" + API_USER + "&t=")}`;
 
         // Elementos
         const audio = document.getElementById('audioPlayer');
-        const albumArt = document.getElementById('albumArt');
-        const bg = document.getElementById('dynamicBg');
-        const playBtnSVG = document.getElementById('playBtnSVG');
-        const progFill = document.getElementById('progFill');
+        const playIcon = document.getElementById('playIcon');
+        const debug = document.getElementById('debug-status');
         
         let lastData = "";
         let audioUnlocked = false;
 
-        // Ícones SVG para Play e Pause
-        const iconPlay = '<path d="M8 5v14l11-7z"/>'; // Triângulo
-        const iconPause = '<path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>'; // Barras
-
-        // Função de Início (Unlock Audio)
-        function startApp() {
-            document.getElementById('lock-screen').style.opacity = '0';
-            setTimeout(() => document.getElementById('lock-screen').style.display = 'none', 500);
+        // 1. DESTRAVAR ÁUDIO (O passo mais importante)
+        function unlockAudio() {
+            document.getElementById('start-overlay').style.display = 'none';
             
-            // Toca silêncio para liberar o motor de áudio
+            // Toca um som vazio só para o Android liberar o áudio do site
             audio.play().then(() => {
                 audio.pause();
                 audioUnlocked = true;
-                checkAPI(); // Primeira checagem
-            }).catch(e => console.log("Erro no unlock", e));
+                log("Áudio Destravado. Aguardando comando...");
+                checkAPI(); // Começa a buscar imediatamente
+            }).catch(e => {
+                log("Erro de Áudio. Toque no Play manualmente.");
+                // Mesmo com erro, vamos tentar seguir
+                audioUnlocked = true;
+                checkAPI();
+            });
         }
 
-        // Loop da API
+        // 2. BUSCA NA API (A cada 3 segundos)
         async function checkAPI() {
             try {
-                const response = await fetch(API_URL + "&t=" + Date.now());
-                const json = await response.json();
+                // Adiciona timestamp para evitar cache
+                const res = await fetch(PROXY_URL + Date.now());
+                const json = await res.json();
                 const rawText = json.data;
 
+                // Só faz algo se o texto mudou e não está vazio
                 if (rawText && rawText !== lastData) {
                     lastData = rawText;
-                    console.log("Nova música:", rawText);
-
-                    // Separa Musica e Artista
-                    let parts = rawText.split("-");
-                    let song = parts[0].trim();
-                    let artist = parts.length > 1 ? parts[1].trim() : "";
-
-                    // Atualiza UI
-                    document.getElementById("trackName").innerText = song;
-                    document.getElementById("artistName").innerText = artist;
+                    log("Recebido: " + rawText);
                     
-                    // Busca Mídia
-                    fetchMedia(song, artist);
+                    // Lógica inteligente de separação
+                    let song = rawText;
+                    let artist = "";
+                    
+                    if (rawText.includes("-")) {
+                        let parts = rawText.split("-");
+                        song = parts[0].trim();
+                        artist = parts[1].trim();
+                    }
+
+                    // Atualiza a tela com o que temos antes mesmo de carregar a capa
+                    updateScreen(song, artist || "Buscando...");
+                    
+                    // Vai buscar a capa e o áudio real
+                    fetchSongData(song, artist);
                 }
-            } catch (error) { console.error(error); }
+            } catch (e) {
+                // Erro silencioso de rede, tenta de novo em 3s
+            }
         }
 
-        async function fetchMedia(song, artist) {
-            const query = encodeURIComponent(`${song} ${artist}`);
+        // 3. BUSCA DADOS DA MÚSICA (Usando iTunes como motor, mas cara de Spotify)
+        async function fetchSongData(song, artist) {
+            // Monta a busca
+            const query = encodeURIComponent(song + " " + artist);
+            
             try {
-                // API iTunes
+                // Busca no iTunes (É mais rápido e não precisa de senha)
                 const res = await fetch(`https://itunes.apple.com/search?term=${query}&media=music&limit=1`);
                 const data = await res.json();
 
-                if (data.results && data.results.length > 0) {
+                if (data.results.length > 0) {
                     const track = data.results[0];
                     
-                    // Capa HD (600x600)
+                    // Pega a capa em Alta Resolução (600x600)
                     const hdCover = track.artworkUrl100.replace('100x100', '600x600');
-                    albumArt.style.backgroundImage = `url('${hdCover}')`;
-                    bg.style.backgroundImage = `url('${hdCover}')`;
+                    document.getElementById("albumArt").style.backgroundImage = `url('${hdCover}')`;
+                    
+                    // Ajusta o texto para o oficial
+                    updateScreen(track.trackName, track.artistName);
 
-                    // Tocar
-                    if (track.previewUrl && audioUnlocked) {
+                    // Tocar Áudio
+                    if (track.previewUrl) {
                         audio.src = track.previewUrl;
-                        audio.play();
-                        setPlayState(true);
+                        if (audioUnlocked) {
+                            audio.play()
+                                .then(() => setPlayState(true))
+                                .catch(e => log("Bloqueio: Toque no Play"));
+                        }
+                    } else {
+                        log("Sem preview disponível.");
                     }
+                } else {
+                    log("Música não encontrada.");
                 }
             } catch (e) { console.log(e); }
         }
 
-        // Controle de Estado (Play/Pause)
+        // Funções de Ajuda Visual
+        function updateScreen(song, artist) {
+            document.getElementById("trackName").innerText = song;
+            document.getElementById("artistName").innerText = artist;
+        }
+
         function setPlayState(isPlaying) {
-            if (isPlaying) {
-                playBtnSVG.innerHTML = iconPause;
-                albumArt.classList.add('playing'); // Efeito de zoom na capa
-            } else {
-                playBtnSVG.innerHTML = iconPlay;
-                albumArt.classList.remove('playing');
-            }
+            playIcon.innerText = isPlaying ? "pause" : "play_arrow";
         }
 
-        function togglePlay() {
+        function manualToggle() {
             if (audio.paused) {
-                audio.play();
-                setPlayState(true);
+                audio.play(); setPlayState(true);
             } else {
-                audio.pause();
-                setPlayState(false);
+                audio.pause(); setPlayState(false);
             }
         }
 
-        // Atualização da Barra de Progresso
+        function log(msg) {
+            debug.innerText = msg;
+            debug.style.display = "block";
+            // Esconde a barra verde depois de 4 segundos
+            setTimeout(() => debug.style.display = "none", 4000);
+        }
+
+        // Barra de Progresso Viva
         audio.ontimeupdate = () => {
             if (audio.duration) {
                 const pct = (audio.currentTime / audio.duration) * 100;
-                progFill.style.width = pct + "%";
+                document.getElementById('progFill').style.width = pct + "%";
                 
-                // Tempo Decorrido
                 let mins = Math.floor(audio.currentTime / 60);
                 let secs = Math.floor(audio.currentTime % 60);
                 if (secs < 10) secs = "0" + secs;
                 document.getElementById('currTime').innerText = mins + ":" + secs;
-                
-                // Tempo Restante (contagem regressiva)
-                let rem = audio.duration - audio.currentTime;
-                let rMins = Math.floor(rem / 60);
-                let rSecs = Math.floor(rem % 60);
-                if (rSecs < 10) rSecs = "0" + rSecs;
-                document.getElementById('endTime').innerText = "-" + rMins + ":" + rSecs;
             }
         };
-
+        
+        // Quando acabar, reseta o botão
         audio.onended = () => setPlayState(false);
 
-        // Checar API a cada 2.5s
-        setInterval(checkAPI, 2500);
+        // Loop Infinito
+        setInterval(checkAPI, 3000);
 
     </script>
 </body>
 </html>
+
