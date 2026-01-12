@@ -6,305 +6,162 @@
     <title>Spotify</title>
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <style>
-        /* --- RESET E BASE --- */
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body {
             margin: 0; padding: 0;
-            background: linear-gradient(180deg, #404040 0%, #121212 100%); /* Gradiente Spotify */
-            font-family: 'Circular', -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif;
+            background: linear-gradient(180deg, #404040 0%, #121212 100%);
+            font-family: 'Circular', -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
             color: white; height: 100vh; overflow: hidden;
             display: flex; flex-direction: column;
+            cursor: pointer;
         }
 
-        /* TELA DE BLOQUEIO (Touch to Start) - OBRIGATÓRIA PARA ÁUDIO */
-        #start-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: #000; z-index: 9999;
-            display: flex; justify-content: center; align-items: center;
-            flex-direction: column; cursor: pointer;
-        }
-        
-        /* HEADER (Setinha e Texto) */
-        .header {
-            display: flex; justify-content: space-between; align-items: center;
-            padding: 15px 20px; margin-top: 10px;
-        }
-        .header-text {
-            text-align: center; font-size: 12px; letter-spacing: 1px;
-            text-transform: uppercase; color: rgba(255,255,255,0.7);
-        }
+        .header { display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; margin-top: 10px; }
+        .header-text { text-align: center; font-size: 11px; letter-spacing: 1px; text-transform: uppercase; color: rgba(255,255,255,0.7); }
 
-        /* CAPA DO ÁLBUM */
-        .album-container {
-            flex: 1; display: flex; justify-content: center; align-items: center; padding: 20px;
-        }
+        .album-container { flex: 1; display: flex; justify-content: center; align-items: center; padding: 20px; }
         .album-art {
             width: 100%; max-width: 340px; aspect-ratio: 1/1;
-            background-color: #282828; background-size: cover; background-position: center;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.6);
-            /* Borda levemente arredondada no estilo Spotify atual */
-            border-radius: 8px; 
-            transition: transform 0.5s ease;
+            background: #282828 url('https://upload.wikimedia.org/wikipedia/commons/1/19/Spotify_logo_without_text.svg') no-repeat center;
+            background-size: 30%; border-radius: 8px; box-shadow: 0 10px 40px rgba(0,0,0,0.6);
+            background-position: center; background-size: cover;
         }
 
-        /* INFO DA FAIXA */
-        .track-info-area {
-            padding: 0 24px; margin-bottom: 20px;
-            display: flex; justify-content: space-between; align-items: center;
-        }
-        .text-group { flex: 1; padding-right: 15px; overflow: hidden; }
-        .track-title {
-            font-size: 24px; font-weight: 700; margin-bottom: 4px;
-            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-        }
-        .track-artist {
-            font-size: 16px; color: #b3b3b3;
-            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-        }
-        .like-icon { color: #1DB954; font-size: 28px; } /* Cor Verde Spotify */
+        .track-info-area { padding: 0 24px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
+        .track-title { font-size: 24px; font-weight: 700; margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .track-artist { font-size: 16px; color: #b3b3b3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .like-icon { color: #1DB954; font-size: 28px; }
 
-        /* BARRA DE PROGRESSO */
         .progress-area { padding: 0 24px; margin-bottom: 10px; }
-        .progress-bar-bg {
-            width: 100%; height: 4px; background-color: rgba(255,255,255,0.3);
-            border-radius: 2px; position: relative;
-        }
-        .progress-bar-fill {
-            width: 0%; height: 100%; background-color: white;
-            border-radius: 2px; position: absolute; transition: width 0.1s linear;
-        }
-        .time-stamps {
-            display: flex; justify-content: space-between; font-size: 11px;
-            color: #b3b3b3; margin-top: 8px; font-weight: 500;
-        }
+        .progress-bar-bg { width: 100%; height: 4px; background-color: rgba(255,255,255,0.3); border-radius: 2px; position: relative; }
+        .progress-bar-fill { width: 0%; height: 100%; background-color: white; border-radius: 2px; position: absolute; }
+        .time-stamps { display: flex; justify-content: space-between; font-size: 11px; color: #b3b3b3; margin-top: 8px; }
 
-        /* CONTROLES DO PLAYER */
-        .controls {
-            display: flex; justify-content: space-between; align-items: center;
-            padding: 0 24px 40px 24px;
-        }
+        .controls { display: flex; justify-content: space-between; align-items: center; padding: 0 24px 40px 24px; }
         .material-icons { font-size: 28px; color: #b3b3b3; }
-        
-        /* Botão Play Especial */
-        .play-pause-btn {
-            width: 65px; height: 65px; background-color: white; border-radius: 50%;
-            display: flex; justify-content: center; align-items: center; color: black;
-            transition: transform 0.1s;
-        }
-        .play-pause-btn:active { transform: scale(0.95); }
+        .play-pause-btn { width: 65px; height: 65px; background-color: white; border-radius: 50%; display: flex; justify-content: center; align-items: center; color: black; z-index: 10; }
         .play-pause-btn .material-icons { color: black; font-size: 40px; }
-        
-        /* ÁREA DE DEBUG (Invisível para o público, útil pra você) */
-        #debug-status {
-            position: absolute; top: 0; left: 0; width: 100%;
-            background: rgba(29, 185, 84, 0.9); color: black; font-weight: bold;
-            font-size: 10px; text-align: center; padding: 2px; display: none;
-            z-index: 10001;
-        }
     </style>
 </head>
-<body>
-
-    <div id="start-overlay" onclick="unlockAudio()">
-        <img src="https://upload.wikimedia.org/wikipedia/commons/1/19/Spotify_logo_without_text.svg" width="60" style="margin-bottom:20px; filter: brightness(100);">
-        <h1 style="font-size: 16px; color: #1DB954; font-weight: bold; text-transform: uppercase; letter-spacing: 1px;">Toque para Conectar</h1>
-    </div>
-
-    <div id="debug-status">Sistema Iniciado</div>
+<body onclick="armAudio()" ontouchstart="armAudio()">
 
     <div class="header">
         <span class="material-icons">keyboard_arrow_down</span>
-        <div class="header-text">
-            TOCANDO DA PLAYLIST<br>
-            <span style="font-weight:bold; color:white;">Descobertas da Semana</span>
-        </div>
+        <div class="header-text">TOCANDO DA PLAYLIST<br><span style="font-weight:bold; color:white;">Descobertas da Semana</span></div>
         <span class="material-icons">more_vert</span>
     </div>
 
     <div class="album-container">
-        <div class="album-art" id="albumArt" style="background-image: url('https://via.placeholder.com/400x400/282828/282828?text=Music');"></div>
+        <div class="album-art" id="albumArt"></div>
     </div>
 
     <div class="track-info-area">
-        <div class="text-group">
+        <div style="flex:1; overflow:hidden;">
             <div class="track-title" id="trackName">Spotify</div>
-            <div class="track-artist" id="artistName">Pronto</div>
+            <div class="track-artist" id="artistName">Conectando...</div>
         </div>
         <span class="material-icons like-icon">favorite</span>
     </div>
 
     <div class="progress-area">
-        <div class="progress-bar-bg">
-            <div class="progress-bar-fill" id="progFill"></div>
-        </div>
-        <div class="time-stamps">
-            <span id="currTime">0:00</span>
-            <span id="totalTime">-0:30</span>
-        </div>
+        <div class="progress-bar-bg"><div class="progress-bar-fill" id="progFill"></div></div>
+        <div class="time-stamps"><span id="currTime">0:00</span><span id="totalTime">-0:30</span></div>
     </div>
 
     <div class="controls">
         <span class="material-icons">shuffle</span>
         <span class="material-icons" style="font-size: 36px;">skip_previous</span>
-        
-        <div class="play-pause-btn" id="playBtn" onclick="manualToggle()">
+        <div class="play-pause-btn" onclick="togglePlay(event)">
             <span class="material-icons" id="playIcon">play_arrow</span>
         </div>
-        
         <span class="material-icons" style="font-size: 36px;">skip_next</span>
         <span class="material-icons">repeat</span>
     </div>
 
-    <audio id="audioPlayer" crossorigin="anonymous"></audio>
+    <audio id="audioPlayer" crossorigin="anonymous" loop></audio>
 
     <script>
-        // --- CONFIGURAÇÃO ---
-        const API_USER = "bhj"; // Seu usuário do Hacked
-        
-        // PROXY: Resolve o problema da tela vermelha (CORS)
+        const API_USER = "bhj";
         const PROXY_URL = `https://api.allorigins.win/raw?url=${encodeURIComponent("https://appmaz.vip/api/getdata.php?user=" + API_USER + "&t=")}`;
-
-        // Elementos
         const audio = document.getElementById('audioPlayer');
         const playIcon = document.getElementById('playIcon');
-        const debug = document.getElementById('debug-status');
-        
-        let lastData = "";
         let audioUnlocked = false;
+        let lastData = "";
 
-        // 1. DESTRAVAR ÁUDIO (O passo mais importante)
-        function unlockAudio() {
-            document.getElementById('start-overlay').style.display = 'none';
-            
-            // Toca um som vazio só para o Android liberar o áudio do site
-            audio.play().then(() => {
-                audio.pause();
-                audioUnlocked = true;
-                log("Áudio Destravado. Aguardando comando...");
-                checkAPI(); // Começa a buscar imediatamente
-            }).catch(e => {
-                log("Erro de Áudio. Toque no Play manualmente.");
-                // Mesmo com erro, vamos tentar seguir
-                audioUnlocked = true;
-                checkAPI();
-            });
+        function armAudio() {
+            if (!audioUnlocked) {
+                audio.play().then(() => {
+                    audio.pause();
+                    audioUnlocked = true;
+                    document.getElementById('artistName').innerText = "Sincronizado";
+                    checkAPI();
+                }).catch(e => console.log("Aguardando toque..."));
+            }
         }
 
-        // 2. BUSCA NA API (A cada 3 segundos)
+        function togglePlay(event) {
+            event.stopPropagation();
+            if (!audioUnlocked) return;
+
+            if (audio.paused) {
+                audio.play();
+                playIcon.innerText = "pause";
+            } else {
+                audio.pause();
+                playIcon.innerText = "play_arrow";
+            }
+        }
+
         async function checkAPI() {
             try {
-                // Adiciona timestamp para evitar cache
                 const res = await fetch(PROXY_URL + Date.now());
                 const json = await res.json();
                 const rawText = json.data;
 
-                // Só faz algo se o texto mudou e não está vazio
                 if (rawText && rawText !== lastData) {
                     lastData = rawText;
-                    log("Recebido: " + rawText);
-                    
-                    // Lógica inteligente de separação
-                    let song = rawText;
-                    let artist = "";
-                    
-                    if (rawText.includes("-")) {
-                        let parts = rawText.split("-");
-                        song = parts[0].trim();
-                        artist = parts[1].trim();
-                    }
-
-                    // Atualiza a tela com o que temos antes mesmo de carregar a capa
-                    updateScreen(song, artist || "Buscando...");
-                    
-                    // Vai buscar a capa e o áudio real
-                    fetchSongData(song, artist);
+                    let [song, artist] = rawText.includes("-") ? rawText.split("-") : [rawText, ""];
+                    fetchAndPlay(song.trim(), artist ? artist.trim() : "");
                 }
-            } catch (e) {
-                // Erro silencioso de rede, tenta de novo em 3s
-            }
+            } catch (e) {}
         }
 
-        // 3. BUSCA DADOS DA MÚSICA (Usando iTunes como motor, mas cara de Spotify)
-        async function fetchSongData(song, artist) {
-            // Monta a busca
-            const query = encodeURIComponent(song + " " + artist);
-            
+        async function fetchAndPlay(song, artist) {
             try {
-                // Busca no iTunes (É mais rápido e não precisa de senha)
-                const res = await fetch(`https://itunes.apple.com/search?term=${query}&media=music&limit=1`);
+                const res = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(song + " " + artist)}&media=music&limit=1`);
                 const data = await res.json();
-
                 if (data.results.length > 0) {
                     const track = data.results[0];
                     
-                    // Pega a capa em Alta Resolução (600x600)
-                    const hdCover = track.artworkUrl100.replace('100x100', '600x600');
-                    document.getElementById("albumArt").style.backgroundImage = `url('${hdCover}')`;
+                    document.getElementById('trackName').innerText = track.trackName;
+                    document.getElementById('artistName').innerText = track.artistName;
+                    document.getElementById('albumArt').style.backgroundImage = `url('${track.artworkUrl100.replace('100x100', '600x600')}')`;
                     
-                    // Ajusta o texto para o oficial
-                    updateScreen(track.trackName, track.artistName);
-
-                    // Tocar Áudio
-                    if (track.previewUrl) {
-                        audio.src = track.previewUrl;
-                        if (audioUnlocked) {
-                            audio.play()
-                                .then(() => setPlayState(true))
-                                .catch(e => log("Bloqueio: Toque no Play"));
-                        }
-                    } else {
-                        log("Sem preview disponível.");
+                    audio.src = track.previewUrl;
+                    audio.volume = 1.0; 
+                    
+                    if (audioUnlocked) {
+                        audio.play();
+                        playIcon.innerText = "pause";
                     }
-                } else {
-                    log("Música não encontrada.");
                 }
-            } catch (e) { console.log(e); }
+            } catch (e) {}
         }
 
-        // Funções de Ajuda Visual
-        function updateScreen(song, artist) {
-            document.getElementById("trackName").innerText = song;
-            document.getElementById("artistName").innerText = artist;
-        }
-
-        function setPlayState(isPlaying) {
-            playIcon.innerText = isPlaying ? "pause" : "play_arrow";
-        }
-
-        function manualToggle() {
-            if (audio.paused) {
-                audio.play(); setPlayState(true);
-            } else {
-                audio.pause(); setPlayState(false);
-            }
-        }
-
-        function log(msg) {
-            debug.innerText = msg;
-            debug.style.display = "block";
-            // Esconde a barra verde depois de 4 segundos
-            setTimeout(() => debug.style.display = "none", 4000);
-        }
-
-        // Barra de Progresso Viva
         audio.ontimeupdate = () => {
             if (audio.duration) {
                 const pct = (audio.currentTime / audio.duration) * 100;
                 document.getElementById('progFill').style.width = pct + "%";
-                
                 let mins = Math.floor(audio.currentTime / 60);
                 let secs = Math.floor(audio.currentTime % 60);
-                if (secs < 10) secs = "0" + secs;
-                document.getElementById('currTime').innerText = mins + ":" + secs;
+                document.getElementById('currTime').innerText = mins + ":" + (secs < 10 ? "0" + secs : secs);
             }
         };
-        
-        // Quando acabar, reseta o botão
-        audio.onended = () => setPlayState(false);
 
-        // Loop Infinito
+        // LOOP GARANTE QUE O ÍCONE NÃO MUDE SE RECOMEÇAR SOZINHO
+        audio.onplay = () => { playIcon.innerText = "pause"; };
+
         setInterval(checkAPI, 3000);
-
     </script>
 </body>
 </html>
