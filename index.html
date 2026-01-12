@@ -7,47 +7,67 @@
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <style>
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        
+        /* Centralização total do corpo */
         body {
             margin: 0; padding: 0;
             background: linear-gradient(180deg, #404040 0%, #121212 100%);
             font-family: 'Circular', -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
-            color: white; height: 100vh; overflow: hidden;
-            display: flex; flex-direction: column;
-            cursor: pointer;
+            color: white; height: 100vh; width: 100vw;
+            overflow: hidden; display: flex; flex-direction: column;
+            justify-content: space-between; /* Distribui o espaço entre topo e base */
         }
 
-        .header { display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; margin-top: 10px; }
-        .header-text { text-align: center; font-size: 11px; letter-spacing: 1px; text-transform: uppercase; color: rgba(255,255,255,0.7); }
+        /* Topo centralizado */
+        .header { 
+            display: flex; justify-content: space-between; align-items: center; 
+            padding: 20px; width: 100%;
+        }
+        .header-text { text-align: center; font-size: 11px; letter-spacing: 1px; text-transform: uppercase; color: rgba(255,255,255,0.7); flex: 1; }
 
-        .album-container { flex: 1; display: flex; justify-content: center; align-items: center; padding: 20px; }
+        /* Container da Capa - Garante que não corte */
+        .album-container { 
+            flex: 1; display: flex; justify-content: center; align-items: center; 
+            padding: 10px 30px; width: 100%;
+        }
         .album-art {
-            width: 100%; max-width: 340px; aspect-ratio: 1/1;
+            width: 100%; max-width: 320px; aspect-ratio: 1/1;
             background: #282828 url('https://upload.wikimedia.org/wikipedia/commons/1/19/Spotify_logo_without_text.svg') no-repeat center;
             background-size: 30%; border-radius: 8px; box-shadow: 0 10px 40px rgba(0,0,0,0.6);
             background-position: center; background-size: cover;
         }
 
-        .track-info-area { padding: 0 24px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
-        .track-title { font-size: 24px; font-weight: 700; margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .track-artist { font-size: 16px; color: #b3b3b3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .like-icon { color: #1DB954; font-size: 28px; }
+        /* Área de Informações */
+        .track-info-area { padding: 0 32px; width: 100%; display: flex; justify-content: space-between; align-items: center; }
+        .track-title { font-size: 22px; font-weight: 700; margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .track-artist { font-size: 15px; color: #b3b3b3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .like-icon { color: #1DB954; font-size: 26px; }
 
-        .progress-area { padding: 0 24px; margin-bottom: 10px; }
-        .progress-bar-bg { width: 100%; height: 4px; background-color: rgba(255,255,255,0.3); border-radius: 2px; position: relative; }
+        /* Barra de Progresso Centralizada */
+        .progress-area { padding: 20px 32px 10px; width: 100%; }
+        .progress-bar-bg { width: 100%; height: 4px; background-color: rgba(255,255,255,0.2); border-radius: 2px; position: relative; }
         .progress-bar-fill { width: 0%; height: 100%; background-color: white; border-radius: 2px; position: absolute; }
         .time-stamps { display: flex; justify-content: space-between; font-size: 11px; color: #b3b3b3; margin-top: 8px; }
 
-        .controls { display: flex; justify-content: space-between; align-items: center; padding: 0 24px 40px 24px; }
+        /* Controles da Base - Ajustados para não cortar */
+        .controls { 
+            display: flex; justify-content: space-between; align-items: center; 
+            padding: 0 32px 40px; width: 100%;
+        }
         .material-icons { font-size: 28px; color: #b3b3b3; }
-        .play-pause-btn { width: 65px; height: 65px; background-color: white; border-radius: 50%; display: flex; justify-content: center; align-items: center; color: black; z-index: 10; }
-        .play-pause-btn .material-icons { color: black; font-size: 40px; }
+        .play-pause-btn { 
+            width: 64px; height: 64px; background-color: white; border-radius: 50%; 
+            display: flex; justify-content: center; align-items: center; color: black; 
+        }
+        .play-pause-btn .material-icons { color: black; font-size: 38px; }
+
     </style>
 </head>
 <body onclick="armAudio()" ontouchstart="armAudio()">
 
     <div class="header">
         <span class="material-icons">keyboard_arrow_down</span>
-        <div class="header-text">TOCANDO DA PLAYLIST<br><span style="font-weight:bold; color:white;">Descobertas da Semana</span></div>
+        <div class="header-text">TOCANDO DA PLAYLIST<br><span style="font-weight:bold; color:white;">DESCOBERTAS DA SEMANA</span></div>
         <span class="material-icons">more_vert</span>
     </div>
 
@@ -70,11 +90,11 @@
 
     <div class="controls">
         <span class="material-icons">shuffle</span>
-        <span class="material-icons" style="font-size: 36px;">skip_previous</span>
+        <span class="material-icons" style="font-size: 32px;">skip_previous</span>
         <div class="play-pause-btn" onclick="togglePlay(event)">
             <span class="material-icons" id="playIcon">play_arrow</span>
         </div>
-        <span class="material-icons" style="font-size: 36px;">skip_next</span>
+        <span class="material-icons" style="font-size: 32px;">skip_next</span>
         <span class="material-icons">repeat</span>
     </div>
 
@@ -95,21 +115,15 @@
                     audioUnlocked = true;
                     document.getElementById('artistName').innerText = "Sincronizado";
                     checkAPI();
-                }).catch(e => console.log("Aguardando toque..."));
+                }).catch(e => console.log("Aguardando..."));
             }
         }
 
         function togglePlay(event) {
             event.stopPropagation();
             if (!audioUnlocked) return;
-
-            if (audio.paused) {
-                audio.play();
-                playIcon.innerText = "pause";
-            } else {
-                audio.pause();
-                playIcon.innerText = "play_arrow";
-            }
+            if (audio.paused) { audio.play(); playIcon.innerText = "pause"; } 
+            else { audio.pause(); playIcon.innerText = "play_arrow"; }
         }
 
         async function checkAPI() {
@@ -117,7 +131,6 @@
                 const res = await fetch(PROXY_URL + Date.now());
                 const json = await res.json();
                 const rawText = json.data;
-
                 if (rawText && rawText !== lastData) {
                     lastData = rawText;
                     let [song, artist] = rawText.includes("-") ? rawText.split("-") : [rawText, ""];
@@ -132,18 +145,11 @@
                 const data = await res.json();
                 if (data.results.length > 0) {
                     const track = data.results[0];
-                    
                     document.getElementById('trackName').innerText = track.trackName;
                     document.getElementById('artistName').innerText = track.artistName;
                     document.getElementById('albumArt').style.backgroundImage = `url('${track.artworkUrl100.replace('100x100', '600x600')}')`;
-                    
                     audio.src = track.previewUrl;
-                    audio.volume = 1.0; 
-                    
-                    if (audioUnlocked) {
-                        audio.play();
-                        playIcon.innerText = "pause";
-                    }
+                    if (audioUnlocked) { audio.play(); playIcon.innerText = "pause"; }
                 }
             } catch (e) {}
         }
@@ -152,14 +158,10 @@
             if (audio.duration) {
                 const pct = (audio.currentTime / audio.duration) * 100;
                 document.getElementById('progFill').style.width = pct + "%";
-                let mins = Math.floor(audio.currentTime / 60);
-                let secs = Math.floor(audio.currentTime % 60);
-                document.getElementById('currTime').innerText = mins + ":" + (secs < 10 ? "0" + secs : secs);
+                let m = Math.floor(audio.currentTime / 60), s = Math.floor(audio.currentTime % 60);
+                document.getElementById('currTime').innerText = m + ":" + (s < 10 ? "0" + s : s);
             }
         };
-
-        // LOOP GARANTE QUE O ÍCONE NÃO MUDE SE RECOMEÇAR SOZINHO
-        audio.onplay = () => { playIcon.innerText = "pause"; };
 
         setInterval(checkAPI, 3000);
     </script>
