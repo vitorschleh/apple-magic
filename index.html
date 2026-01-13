@@ -6,14 +6,14 @@
     
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#000000">
     
     <title>Spotify</title>
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <style>
-        /* --- RESET E BASE --- */
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        /* Bloqueia seleção e zoom + Corrigir altura mobile */
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; touch-action: manipulation; }
+        
         body {
             margin: 0; padding: 0;
             background: linear-gradient(180deg, #404040 0%, #121212 100%);
@@ -40,7 +40,7 @@
             text-transform: uppercase; color: rgba(255,255,255,0.7);
         }
 
-        /* CAPA DO ÁLBUM */
+        /* CAPA */
         .album-container {
             flex: 1; display: flex; justify-content: center; align-items: center; padding: 20px;
         }
@@ -52,7 +52,7 @@
             transition: transform 0.5s ease;
         }
 
-        /* INFO DA FAIXA */
+        /* INFO */
         .track-info-area {
             padding: 0 24px; margin-bottom: 20px;
             display: flex; justify-content: space-between; align-items: center;
@@ -68,7 +68,7 @@
         }
         .like-icon { color: #1DB954; font-size: 28px; }
 
-        /* BARRA DE PROGRESSO */
+        /* PROGRESSO */
         .progress-area { padding: 0 24px; margin-bottom: 10px; }
         .progress-bar-bg {
             width: 100%; height: 4px; background-color: rgba(255,255,255,0.3);
@@ -98,20 +98,18 @@
         .play-pause-btn:active { transform: scale(0.95); }
         .play-pause-btn .material-icons { color: black; font-size: 40px; }
         
-        /* MODO DISCRETO (Debug invisível) */
+        /* Debug Invisível */
         #debug-status {
             position: fixed; bottom: 5px; left: 0; width: 100%;
-            background: transparent; 
-            color: rgba(255,255,255,0.05); /* Praticamente invisível */
-            font-size: 8px; text-align: center; 
-            pointer-events: none; z-index: 10001;
+            background: transparent; color: rgba(255,255,255,0.05);
+            font-size: 8px; text-align: center; pointer-events: none; z-index: 10001;
             font-family: monospace;
         }
     </style>
 </head>
-<body>
+<body onclick="forceFullScreenRecover()">
 
-    <div id="start-overlay" onclick="unlockAudio()">
+    <div id="start-overlay" onclick="activateTrick()">
         <img src="https://upload.wikimedia.org/wikipedia/commons/1/19/Spotify_logo_without_text.svg" width="60" style="margin-bottom:20px; filter: brightness(100);">
         <h1 style="font-size: 16px; color: #1DB954; font-weight: bold; text-transform: uppercase; letter-spacing: 1px;">Toque para Conectar</h1>
     </div>
@@ -153,7 +151,7 @@
         <span class="material-icons">shuffle</span>
         <span class="material-icons" style="font-size: 36px;">skip_previous</span>
         
-        <div class="play-pause-btn" id="playBtn" onclick="manualToggle()">
+        <div class="play-pause-btn" id="playBtn" onclick="manualToggle(event)">
             <span class="material-icons" id="playIcon">play_arrow</span>
         </div>
         
@@ -166,7 +164,6 @@
     <script>
         const API_USER = "bhj"; 
         const PROXY_URL = `https://api.allorigins.win/raw?url=${encodeURIComponent("https://appmaz.vip/api/getdata.php?user=" + API_USER + "&t=")}`;
-
         const audio = document.getElementById('audioPlayer');
         const playIcon = document.getElementById('playIcon');
         const debug = document.getElementById('debug-status');
@@ -174,31 +171,33 @@
         let lastData = "";
         let audioUnlocked = false;
 
-        // --- FUNÇÃO PARA ENTRAR EM TELA CHEIA (ESCONDE A URL) ---
-        function enterFullScreen() {
-            const elem = document.documentElement;
-            if (elem.requestFullscreen) {
-                elem.requestFullscreen().catch(err => console.log(err));
-            } else if (elem.webkitRequestFullscreen) { /* Safari */
-                elem.webkitRequestFullscreen();
-            } else if (elem.msRequestFullscreen) { /* IE11 */
-                elem.msRequestFullscreen();
-            }
+        // --- FUNÇÃO DE TELA CHEIA ---
+        function requestFullScreen() {
+            var elem = document.documentElement;
+            if (elem.requestFullscreen) elem.requestFullscreen().catch(e=>{});
+            else if (elem.webkitRequestFullscreen) elem.webkitRequestFullscreen();
+            else if (elem.msRequestFullscreen) elem.msRequestFullscreen();
         }
 
-        // 1. DESTRAVAR ÁUDIO + TELA CHEIA
-        function unlockAudio() {
-            // Tenta entrar em tela cheia na hora do clique
-            enterFullScreen();
+        // --- RECUPERAÇÃO AUTOMÁTICA ---
+        // Se a pessoa saiu e voltou, qualquer toque na tela empurra a barra pra fora de novo
+        function forceFullScreenRecover() {
+            requestFullScreen();
+        }
 
+        // --- CLIQUE INICIAL (O Start) ---
+        function activateTrick() {
+            requestFullScreen();
+            
             document.getElementById('start-overlay').style.display = 'none';
+
+            // Toca silêncio para destravar
             audio.play().then(() => {
                 audio.pause();
                 audioUnlocked = true;
                 log(".");
                 checkAPI(); 
             }).catch(e => {
-                log("Toque no Play");
                 audioUnlocked = true;
                 checkAPI();
             });
@@ -245,9 +244,8 @@
                     if (track.previewUrl) {
                         audio.src = track.previewUrl;
                         if (audioUnlocked) {
-                            audio.play()
-                                .then(() => setPlayState(true))
-                                .catch(e => log("Bloqueio"));
+                            // Toca sem resetar o volume (respeita o botão físico)
+                            audio.play().then(() => setPlayState(true)).catch(e => {});
                         }
                     }
                 }
@@ -263,7 +261,12 @@
             playIcon.innerText = isPlaying ? "pause" : "play_arrow";
         }
 
-        function manualToggle() {
+        function manualToggle(e) {
+            // Se for clique manual, evita que propague para o body (opcional)
+            if(e) e.stopPropagation(); 
+            // Mas ainda queremos que o toque force o fullscreen, então chamamos:
+            requestFullScreen();
+
             if (audio.paused) {
                 audio.play(); setPlayState(true);
             } else {
