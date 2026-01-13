@@ -3,6 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#000000">
+    
     <title>Spotify</title>
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <style>
@@ -92,11 +98,11 @@
         .play-pause-btn:active { transform: scale(0.95); }
         .play-pause-btn .material-icons { color: black; font-size: 40px; }
         
-        /* MODO DISCRETO: Texto fantasma no rodapé */
+        /* MODO DISCRETO (Debug invisível) */
         #debug-status {
             position: fixed; bottom: 5px; left: 0; width: 100%;
             background: transparent; 
-            color: rgba(255,255,255,0.1); /* Quase invisível */
+            color: rgba(255,255,255,0.05); /* Praticamente invisível */
             font-size: 8px; text-align: center; 
             pointer-events: none; z-index: 10001;
             font-family: monospace;
@@ -158,7 +164,6 @@
     <audio id="audioPlayer" crossorigin="anonymous" loop></audio>
 
     <script>
-        // --- CONFIGURAÇÃO ---
         const API_USER = "bhj"; 
         const PROXY_URL = `https://api.allorigins.win/raw?url=${encodeURIComponent("https://appmaz.vip/api/getdata.php?user=" + API_USER + "&t=")}`;
 
@@ -169,12 +174,28 @@
         let lastData = "";
         let audioUnlocked = false;
 
+        // --- FUNÇÃO PARA ENTRAR EM TELA CHEIA (ESCONDE A URL) ---
+        function enterFullScreen() {
+            const elem = document.documentElement;
+            if (elem.requestFullscreen) {
+                elem.requestFullscreen().catch(err => console.log(err));
+            } else if (elem.webkitRequestFullscreen) { /* Safari */
+                elem.webkitRequestFullscreen();
+            } else if (elem.msRequestFullscreen) { /* IE11 */
+                elem.msRequestFullscreen();
+            }
+        }
+
+        // 1. DESTRAVAR ÁUDIO + TELA CHEIA
         function unlockAudio() {
+            // Tenta entrar em tela cheia na hora do clique
+            enterFullScreen();
+
             document.getElementById('start-overlay').style.display = 'none';
             audio.play().then(() => {
                 audio.pause();
                 audioUnlocked = true;
-                log("."); // Texto mínimo
+                log(".");
                 checkAPI(); 
             }).catch(e => {
                 log("Toque no Play");
@@ -191,7 +212,7 @@
 
                 if (rawText && rawText !== lastData) {
                     lastData = rawText;
-                    log(rawText); // Mostra o nome da música bem discreto no rodapé
+                    log(rawText);
                     
                     let song = rawText;
                     let artist = "";
@@ -251,7 +272,6 @@
         }
 
         function log(msg) {
-            // O texto vai aparecer bem pequeno no rodapé e sumir rápido
             debug.innerText = msg;
             debug.style.opacity = "1";
             setTimeout(() => debug.style.opacity = "0", 3000);
@@ -269,9 +289,7 @@
             }
         };
 
-        // Com o loop ativado, não precisamos resetar o botão quando acaba
         setInterval(checkAPI, 3000);
-
     </script>
 </body>
 </html>
